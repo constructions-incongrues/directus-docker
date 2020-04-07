@@ -58,24 +58,33 @@ function build_help() {
 
       Optional:
 
-        --kind <kind>         The kind of image to build. For example: apache
-                              [default: apache]
-        --version <version>   The project version to fetch and build.
-                              [default: latest]
-        --ref <ref>           The git reference (can be a commit, a branch name or a tag).
-                              [default: \${version}]
-        --repository <repo>   The GitHub repository to fetch from (format: user/repo).
-                              This can also be a local machine folder containing the git
-                              repository.
-                              [default: directus/directus]
-        --image <image>       The image name.
-                              [default: directus/directus]
+        --kind <kind>                           The kind of image to build. For example: apache
+                                                [default: apache]
+        --version <version>                     The project version to fetch and build.
+                                                [default: latest]
+        --ref <ref>                             The git reference (can be a commit, a branch name or a tag).
+                                                [default: \${version}]
+        --repository <repo>                     The GitHub repository to fetch from (format: user/repo).
+                                                This can also be a local machine folder containing the git
+                                                repository.
+                                                [default: directus/directus]
+        --image <image>                         The image name.
+                                                [default: directus/directus]
+        --buildx-import-prefix <prefix>         Local images prefix.
+                                                [default: directus-buildx-]
+        --buildx-platforms <platforms>          Space separated list of build target platforms.
+                                                [default: linux/amd64 linux/arm linux/arm64]
+
 
     Flags:
       --help                Shows this screen.
       --push                Push the output images after each build.
                             [default: not set]
       --fresh               Fetches a clean repository and build from it. Takes longer.
+                            [default: not set]
+      --buildx              Use buildx for building multi-platform images if available.
+                            [default: not set]
+      --buildx-import       Imports separate platform images into local Docker.
                             [default: not set]
   " | cut -c 5-
 }
@@ -93,6 +102,15 @@ function build() {
   push=$(flagd push)
   fresh=$(flagd fresh)
   context_dir="${root}/images/${kind}"
+
+  buildx=$(flagd buildx)
+  if [ "$(docker buildx version)" ] && [ "$buildx" == "true" ]; then
+    buildx_enabled=true
+    buildx_import_prefix=$(argument buildx-import-prefix "directus-buildx-")
+    buildx_import=$(flagd buildx-import)
+    buildx_platforms=$(argument buildx-platforms "linux/amd64 linux/arm linux/arm64")
+    echo "[buildx] Using $(docker buildx version)"
+  fi
 
   is_dir=false
   if [ -d "${repository}" ]; then
@@ -198,23 +216,42 @@ function build() {
   cp -ra "${context_dir}/." "./context/"
   cp -ra "${repository_dir}/." "./context/directus/"
 
-  temp_image="temp-directus-${kind}:${repository_commit:0:8}"
-  docker build -t ${temp_image} ./context
-
   images=$(make_tags ${image} ${kind} ${version})
-
-  echo "Tags = ${images}"
-
-  for image in $images
-  do
-    echo Tagging ${image}
-    docker tag "${temp_image}" "${image}"
-    if [ $push == true ]; then
-      docker push ${image}
+  if [ "$buildx_enabled" == true ]; then
+    if [ "$buildx_import" == true ]; then
+      echo "[buildx] Building and importing separate platform images"
+      for arch in ${buildx_platforms}  ; do
+        buildx_image="${buildx_import_prefix}${kind}-$(echo ${arch} | tr '/' '-'):${repository_commit:0:8}"
+        echo ""
+        echo "[buildx] ${arch} : ${buildx_image}"
+        docker buildx build \
+        --platform "$arch" \
+        --output type=docker \
+        --tag "${buildx_image}" \
+        ./context
+      done
     fi
-  done
-
-  docker image rm ${temp_image}
+    if [ $push == true ]; then
+      for image in $images
+      do
+          echo "[buildx] Building and pushing multi-platform image"
+          docker buildx build --platform "$(echo $buildx_platforms | tr ' ' ',')" --tag "${image}" --push ./context
+        done
+      fi
+  else
+    temp_image="temp-directus-${kind}:${repository_commit:0:8}"
+    docker build -t ${temp_image} ./context
+    echo "Tags = ${images}"
+    for image in $images
+    do
+      echo Tagging ${image}
+      docker tag ${temp_image} ${image}
+      if [ $push == true ]; then
+        docker push ${image}
+      fi
+    done
+    docker rmi ${temp_image}
+  fi
 }
 
 #
