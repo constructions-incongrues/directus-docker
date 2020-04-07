@@ -4,7 +4,8 @@ set -ex
 
 version="${TRAVIS_TAG}"
 branch="${TRAVIS_BRANCH:-"master"}"
-repository="${DOCKER_REPOSITORY:-"directus/directus"}"
+docker_repository="${DOCKER_REPOSITORY:-"directus/directus"}"
+github_repository="${GITHUB_REPOSITORY:-"directus/directus-docker"}"
 platforms="${BUILDX_PLATFORMS:-"linux/amd64"}"
 
 if [ "${branch}" == "master" ]; then
@@ -21,7 +22,7 @@ if [ "${branch}" == "master" ]; then
 fi
 
 if [ "${version}" != "" ]; then
-  $(dirname ${0})/build --version "${version}" --image "${repository}" --buildx --buildx-platforms "$platforms" --push
+  $(dirname ${0})/build --repository "${github_repository}" --version "${version}" --image "${docker_repository}" --buildx --buildx-platforms "$platforms" --push
 else
-  $(dirname ${0})/build --version "${branch}" --ref "${branch}" --image "${repository}" --buildx --buildx-platforms "$platforms"
+  $(dirname ${0})/build --repository "${github_repository}" --version "${branch}" --ref "${branch}" --image "${docker_repository}" --buildx --buildx-platforms "$platforms"
 fi
