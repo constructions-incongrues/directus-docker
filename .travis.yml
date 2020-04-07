@@ -22,4 +22,5 @@ branches:
   only:
     - master
     - develop
+    - multiarch
     - /^v\d+\.\d+\.\d+.*$/
