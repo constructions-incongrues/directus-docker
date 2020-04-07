@@ -24,5 +24,5 @@ fi
 if [ "${version}" != "" ]; then
   $(dirname ${0})/build --repository "${github_repository}" --version "${version}" --image "${docker_repository}" --buildx --buildx-platforms "$platforms" --push
 else
-  $(dirname ${0})/build --repository "${github_repository}" --version "${branch}" --ref "${branch}" --image "${docker_repository}" --buildx --buildx-platforms "$platforms"
+  $(dirname ${0})/build --repository "${github_repository}" --version "${branch}" --ref "${branch}" --image "${docker_repository}" --buildx --buildx-platforms "$platforms" --push
 fi
