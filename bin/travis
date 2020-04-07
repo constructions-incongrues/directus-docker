@@ -4,11 +4,12 @@ set -e
 
 version="${TRAVIS_TAG}"
 branch="${TRAVIS_BRANCH:-"master"}"
+repository="${DOCKER_REPOSITORY:-"directus/directus"}"
 
 if [ "${branch}" == "master" ]; then
   LOGIN_PAYLOAD="{\"username\":\"${DOCKER_USERNAME}\",\"password\":\"${DOCKER_PASSWORD}\"}"
   TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d "${LOGIN_PAYLOAD}" https://hub.docker.com/v2/users/login/ | jq -r .token)
-  REPO_URL="https://hub.docker.com/v2/repositories/directus/directus/"
+  REPO_URL="https://hub.docker.com/v2/repositories/${DOCKER_REPOSITORY}/"
   RESPONSE_CODE=$(curl -s --write-out %{response_code} --output /dev/null -H "Authorization: JWT ${TOKEN}" -X PATCH --data-urlencode full_description@./README.md ${REPO_URL})
   if [ $RESPONSE_CODE -eq 200 ]; then
     echo "Updated directus readme"
@@ -19,8 +20,7 @@ if [ "${branch}" == "master" ]; then
 fi
 
 if [ "${version}" != "" ]; then
-  $(dirname ${0})/build --version "${version}" --push
+  $(dirname ${0})/build --version "${version}" --image "${repository}" --buildx --push
 else
-  $(dirname ${0})/build --version "${branch}" --ref "master"
+  $(dirname ${0})/build --version "${branch}" --image "${repository}" --ref "master" --buildx
 fi
-
