@@ -21,11 +21,8 @@ if [ "${branch}" == "master" ]; then
   fi
 fi
 
-sudo docker buildx create --use
-sudo docker buildx inspect --bootstrap
-
 if [ "${version}" != "" ]; then
-  sudo $(dirname ${0})/build --repository "${github_repository}" --version "${version}" --image "${docker_repository}" --buildx --buildx-platforms "$platforms" --push
+  $(dirname ${0})/build --repository "${github_repository}" --version "${version}" --image "${docker_repository}" --buildx --buildx-platforms "$platforms" --push --fresh
 else
-  sudo $(dirname ${0})/build --repository "${github_repository}" --version "${branch}" --ref "${branch}" --image "${docker_repository}" --buildx --buildx-import --buildx-platforms "$platforms"
+  $(dirname ${0})/build --repository "${github_repository}" --version "${branch}" --ref "${branch}" --image "${docker_repository}" --buildx --buildx-import --buildx-platforms "$platforms" --fresh
 fi

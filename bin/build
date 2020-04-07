@@ -211,7 +211,7 @@ function build() {
   if [ -e "./context" ]; then
     rm -rf ./context
   fi
-  mkdir -p ./context/directus
+  mkdir -p ./context/directus ./context/directus/config
 
   cp -ra "${context_dir}/." "./context/"
   cp -ra "${repository_dir}/." "./context/directus/"
