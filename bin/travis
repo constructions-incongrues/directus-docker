@@ -21,6 +21,9 @@ if [ "${branch}" == "master" ]; then
   fi
 fi
 
+docker buildx create --use
+docker buildx inspect --bootstrap
+
 if [ "${version}" != "" ]; then
   $(dirname ${0})/build --repository "${github_repository}" --version "${version}" --image "${docker_repository}" --buildx --buildx-platforms "$platforms" --push
 else
