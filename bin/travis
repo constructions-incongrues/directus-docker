@@ -22,7 +22,7 @@ if [ "${branch}" == "master" ]; then
 fi
 
 if [ "${version}" != "" ]; then
-  $(dirname ${0})/build --repository "${github_repository}" --version "${version}" --image "${docker_repository}" --buildx --buildx-platforms "$platforms" --push --fresh
+  $(dirname ${0})/build --repository "${github_repository}" --version "${version}" --image "${docker_repository}" --buildx --buildx-platforms "$(echo $platforms | tr ' ', ',')" --push --fresh
 else
-  $(dirname ${0})/build --repository "${github_repository}" --version "${branch}" --ref "${branch}" --image "${docker_repository}" --buildx --buildx-import --buildx-platforms "$platforms" --fresh
+  $(dirname ${0})/build --repository "${github_repository}" --version "${branch}" --ref "${branch}" --image "${docker_repository}" --buildx --buildx-import --buildx-platforms "$(echo $platforms | tr ' ', ',')"  --fresh
 fi
