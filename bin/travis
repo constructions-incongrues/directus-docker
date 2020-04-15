@@ -5,7 +5,7 @@ set -ex
 version="${TRAVIS_TAG}"
 branch="${TRAVIS_BRANCH:-"master"}"
 docker_repository="${DOCKER_REPOSITORY:-"directus/directus"}"
-github_repository="${GITHUB_REPOSITORY:-"directus/directus-docker"}"
+github_repository="${GITHUB_REPOSITORY:-"directus/directus"}"
 platforms="${BUILDX_PLATFORMS:-"linux/amd64"}"
 
 if [ "${branch}" == "master" ]; then
